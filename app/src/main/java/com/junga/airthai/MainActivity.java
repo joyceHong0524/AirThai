@@ -12,9 +12,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import com.google.android.material.bottomappbar.BottomAppBar;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
@@ -27,6 +31,7 @@ import com.junga.airthai.api.HttpConnection;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 
 import androidx.appcompat.widget.Toolbar;
 import okhttp3.Call;
@@ -40,20 +45,30 @@ public class MainActivity extends AppCompatActivity {
             .create();
     private DataVO dataVO;
     private TextView requestedCity, aqi, qualityToText, update;
-    HttpConnection httpConnection;
-    private String cityName = "Bangkok";
+    private HttpConnection httpConnection;
+    FloatingActionButton fab;
+    private final String cityName = "Bangkok";
 
     private SQLiteDatabase sqLiteDb;
+    private ArrayList<CityVO>  cityList = new ArrayList<>();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        requestedCity = (TextView) findViewById(R.id.city_name);
-        aqi = (TextView) findViewById(R.id.aqi);
-        qualityToText = (TextView) findViewById(R.id.quality_text);
-        update = (TextView) findViewById(R.id.update);
+        requestedCity = findViewById(R.id.city_name);
+        aqi = findViewById(R.id.aqi);
+        qualityToText = findViewById(R.id.quality_text);
+        update = findViewById(R.id.update);
+        fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d(TAG, "onClick: Fab is clicked");
+            }
+        });
 
 
         httpConnection = HttpConnection.getInstance();
@@ -94,8 +109,16 @@ public class MainActivity extends AppCompatActivity {
 
         //Setting database.
         sqLiteDb = initDatabase();
+        DropTable("CITY_T");
         initTable();
+
+
+        insertValue(new CityVO("seoul",1));
+        insertValue(new CityVO("bangkok",0));
+
         loadValues();
+
+
 
     }
 
@@ -121,6 +144,9 @@ public class MainActivity extends AppCompatActivity {
     };
 
 
+
+
+
     class MyDeserializer implements JsonDeserializer<DataVO> {
         @Override
         public DataVO deserialize(JsonElement je, Type type, JsonDeserializationContext jdc)
@@ -138,8 +164,19 @@ public class MainActivity extends AppCompatActivity {
 
     private void setToolbar() {
 
-        BottomAppBar bar = (BottomAppBar) findViewById(R.id.bar);
+        BottomAppBar bar = findViewById(R.id.bar);
         setSupportActionBar(bar);
+//        bar.setNavigationOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                if(view.getId() == R.id.fab){
+//                    Log.d(TAG, "onClick: fabclicked");
+//                } else if (view.getId() == android.R.id.home){
+//                    Log.d(TAG, "onContextItemSelected: clicked");
+//                    refreshDrawerItems();
+//                }
+//            }
+//        });
 
     }
 
@@ -191,8 +228,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void initTable(){
         String query = "CREATE TABLE IF NOT EXISTS CITY_T ("+
-                "NAME"             + "TEXT NOT NULL," +
-                "FAVORITE"         + "INTEGER NOT NULL)"; //Since sqlite doesn't have boolean type. true = 1, false = 0
+                "NAME "             + "TEXT," +
+                "FAVORITE "         + "INTEGER NOT NULL)"; //Since sqlite doesn't have boolean type. true = 1, false = 0
 
         Log.d(TAG, "initTable: query string :" +query);
         sqLiteDb.execSQL(query);
@@ -201,14 +238,82 @@ public class MainActivity extends AppCompatActivity {
     private void loadValues(){
         if (sqLiteDb != null){
             String query = "SELECT * FROM CITY_T";
-            Cursor cursor = null;
+            Cursor cursor;
 
             cursor = sqLiteDb.rawQuery(query,null);
 
             while(cursor.moveToNext()){ // if the record exists,
 
+                String name = cursor.getString(0);
+                int favorite = cursor.getInt(1);
+                CityVO city = new CityVO(name,favorite);
+                cityList.add(city);
+
+                Log.d(TAG, "loadValues: "+city.toString());
+
+
 
             }
         }
+    }
+
+    private void DeleteValue(String cityName){
+        if(sqLiteDb!=null){
+            String query = "DELETE FROM CITY_T WHERE NAME ="+cityName;
+            sqLiteDb.execSQL(query);
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        if(item.getItemId() == android.R.id.home){
+            Log.d(TAG, "onContextItemSelected: clicked");
+            refreshDrawerItems();}
+//        }else if (item.getItemId()==R.id.fab){ //I don't know exactly why but these
+//            Log.d(TAG, "onOptionsItemSelected: FabClicked");
+//            cityList.add(new CityVO("fab1 clicked",0));
+//            refreshDrawerItems();
+//        }
+        return super.onOptionsItemSelected(item);
+    }
+
+
+    private void insertValue(CityVO city){
+        if(sqLiteDb != null){
+            String query = "INSERT INTO CITY_T (NAME, FAVORITE) VALUES ("+"'"+city.getName()+"',"+city.getFavorite()+")";
+
+            Log.d(TAG, "insertValue: insert query: "+query);
+            sqLiteDb.execSQL(query);
+        }
+    }
+
+    private void DropTable(String tableName){
+        if(sqLiteDb != null){
+            String query = "DROP TABLE "+tableName;
+            sqLiteDb.execSQL(query);
+        }
+    }
+
+    private String cityNameParsing(String url){
+        String cityName="";
+
+
+        return cityName;
+    }
+
+    private void refreshDrawerItems(){
+        DrawerFragment drawerFragment = new DrawerFragment();
+        Bundle bundle = new Bundle();
+
+        ArrayList<String> stringArrayList = new ArrayList<>();
+
+        for(CityVO data: cityList){
+            stringArrayList.add(data.getName());
+        }
+        bundle.putStringArrayList("city",stringArrayList);
+        drawerFragment.setArguments(bundle);
+        Log.d(TAG, "refreshDrawerItems: "+bundle.toString());
+        drawerFragment.show(getSupportFragmentManager(),drawerFragment.getTag());
     }
 }

@@ -6,4 +6,5 @@
     <color name="lighter_pink">#F06161</color>
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
+    <color name="black_transparent">#52000000</color>
 </resources>
