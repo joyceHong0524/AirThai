@@ -1,12 +1,14 @@
 package com.junga.airthai;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Handler;
 import android.os.Message;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
@@ -34,6 +36,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 
 import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.FragmentManager;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
@@ -51,7 +54,18 @@ public class MainActivity extends AppCompatActivity {
 
     private SQLiteDatabase sqLiteDb;
     private ArrayList<CityVO>  cityList = new ArrayList<>();
+    private ArrayList<String> cityListForSearch = new ArrayList<>();
 
+    private FragmentManager fm = getSupportFragmentManager();
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if(requestCode == 1){
+
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +81,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Log.d(TAG, "onClick: Fab is clicked");
+                Intent intent = new Intent(MainActivity.this, SearchActivity.class);
+                startActivity(intent);
             }
         });
 
@@ -118,6 +134,9 @@ public class MainActivity extends AppCompatActivity {
 
         loadValues();
 
+        //setting search function.
+
+        setSearchFunction();
 
 
     }
@@ -315,5 +334,33 @@ public class MainActivity extends AppCompatActivity {
         drawerFragment.setArguments(bundle);
         Log.d(TAG, "refreshDrawerItems: "+bundle.toString());
         drawerFragment.show(getSupportFragmentManager(),drawerFragment.getTag());
+    }
+
+    private void setSearchFunction(){
+        cityListForSearch.add("bangkok");
+        cityListForSearch.add("samut sakhon");
+        cityListForSearch.add("nonthaburi");
+        cityListForSearch.add("Rayong");
+        cityListForSearch.add("chiang mai");
+        cityListForSearch.add("nakhon sawan");
+        cityListForSearch.add("surat thani");
+        cityListForSearch.add("phuket");
+        cityListForSearch.add("chiang rai");
+        cityListForSearch.add("mae hong son"); //doesn't work
+        cityListForSearch.add("phrae");
+        cityListForSearch.add("phayao");
+        cityListForSearch.add("samut prakan");
+        cityListForSearch.add("ratchaburi");
+        cityListForSearch.add("songkhla");
+        cityListForSearch.add("khon kaen");
+        cityListForSearch.add("nakhon ratchasima");
+        cityListForSearch.add("chachoengsao");
+        cityListForSearch.add("narathiwat");
+        cityListForSearch.add("yala");
+        cityListForSearch.add("lamphun");
+        cityListForSearch.add("sa kaeo");
+        cityListForSearch.add("pathum thani");
+        cityListForSearch.add("satun");
+        cityListForSearch.add("yangon");
     }
 }
