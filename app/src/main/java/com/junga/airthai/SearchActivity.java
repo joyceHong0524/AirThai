@@ -1,8 +1,15 @@
 package com.junga.airthai;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -12,16 +19,68 @@ import androidx.appcompat.app.AppCompatActivity;
 public class SearchActivity extends AppCompatActivity {
 
     ListView listView;
+    EditText editText;
+    ArrayAdapter adapter;
     private ArrayList<String> cityListForSearch = new ArrayList<>();
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.search_fragment);
 
+        listView = findViewById(R.id.listView);
+        editText = findViewById(R.id.editText);
+
+        configCityList();
+
+
+
+
+
+        adapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1,cityListForSearch);
+        listView = findViewById(R.id.listView);
+        listView.setAdapter(adapter);
+
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                Toast.makeText(getApplicationContext(),"Position"+adapter.getItem(i).toString(),Toast.LENGTH_SHORT).show();
+                //adpater.getItem(i) shows content of the clicked item.
+
+                Intent intent = new Intent();
+                intent.putExtra("city",adapter.getItem(i).toString());
+                setResult(RESULT_OK,intent);
+                finish();
+            }
+
+
+        });
+
+        editText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                SearchActivity.this.adapter.getFilter().filter(charSequence);
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
+
+
+    }
+
+    private void configCityList(){
         cityListForSearch.add("bangkok");
         cityListForSearch.add("samut sakhon");
         cityListForSearch.add("nonthaburi");
-        cityListForSearch.add("Rayong");
+        cityListForSearch.add("rayong");
         cityListForSearch.add("chiang mai");
         cityListForSearch.add("nakhon sawan");
         cityListForSearch.add("surat thani");
@@ -43,16 +102,5 @@ public class SearchActivity extends AppCompatActivity {
         cityListForSearch.add("pathum thani");
         cityListForSearch.add("satun");
         cityListForSearch.add("yangon");
-
-
-
-        String[] list = {};
-
-        ArrayAdapter adapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1,cityListForSearch);
-        listView = findViewById(R.id.listView);
-        listView.setAdapter(adapter);
-
-
-
     }
 }

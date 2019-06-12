@@ -18,6 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.PopupMenu;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -43,12 +44,17 @@ import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
+    private static final int SEARCH = 3000;
+
+
+
     private final Gson gson = new GsonBuilder()
             .registerTypeAdapter(DataVO.class, new MyDeserializer())
             .create();
     private DataVO dataVO;
     private TextView requestedCity, aqi, qualityToText, update;
     private HttpConnection httpConnection;
+    private Callback requestCallback;
     FloatingActionButton fab;
     private final String cityName = "Bangkok";
 
@@ -61,7 +67,16 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if(requestCode == 1){
+        if(resultCode == RESULT_OK){
+            switch (requestCode) {
+                case SEARCH:
+                    if(data!=null){
+                    String cityName = data.getStringExtra("city");
+                    Toast.makeText(this,cityName,Toast.LENGTH_SHORT).show();
+                    httpConnection.requestWebServer(cityName,requestCallback);
+                    }
+                    break;
+            }
 
         }
         super.onActivityResult(requestCode, resultCode, data);
@@ -82,13 +97,13 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Log.d(TAG, "onClick: Fab is clicked");
                 Intent intent = new Intent(MainActivity.this, SearchActivity.class);
-                startActivity(intent);
+                startActivityForResult(intent,SEARCH);
             }
         });
 
 
         httpConnection = HttpConnection.getInstance();
-        httpConnection.requestWebServer(cityName, new Callback() {
+        requestCallback = new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 Log.e(TAG, "onFailure: " + e.toString());
@@ -104,7 +119,8 @@ public class MainActivity extends AppCompatActivity {
                 }
 
             }
-        });
+        };
+        httpConnection.requestWebServer(cityName, requestCallback);
 
         httpConnection.requestWebServer("seoul", new Callback() {
             @Override
@@ -141,6 +157,9 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+
+
+
     @SuppressLint("HandlerLeak")
     private final
     Handler handler = new Handler() {
@@ -161,6 +180,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+
 
 
 
