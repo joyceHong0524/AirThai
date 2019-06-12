@@ -31,6 +31,7 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonSyntaxException;
 import com.junga.airthai.api.DataVO;
 import com.junga.airthai.api.HttpConnection;
 
@@ -66,7 +67,6 @@ public class MainActivity extends AppCompatActivity {
 
     private SQLiteDatabase sqLiteDb;
     private ArrayList<CityVO> cityList = new ArrayList<>();
-    private ArrayList<String> cityListForSearch = new ArrayList<>();
 
     private FragmentManager fm = getSupportFragmentManager();
 
@@ -79,7 +79,6 @@ public class MainActivity extends AppCompatActivity {
                     if (data != null) {
                         cityName = data.getStringExtra("city");
                         String cityName2 = urlString(cityName); //Change string in the form that I can use in url.
-                        Toast.makeText(this, cityName2, Toast.LENGTH_SHORT).show();
                         httpConnection.requestWebServer(cityName2, requestCallback);
                     }
                     break;
@@ -143,10 +142,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if (response.body() != null) {
-                    String json = response.body().string();
-                    dataVO = gson.fromJson(json, DataVO.class);
 
-                    handler.sendEmptyMessage(1);
+                    try {
+                        String json = response.body().string();
+                        dataVO = gson.fromJson(json, DataVO.class);
+
+                        handler.sendEmptyMessage(1);
+                    }catch (JsonSyntaxException e){
+                        Log.d(TAG, "onResponse: doesn't work city");
+                    }
                 }
 
             }
@@ -159,13 +163,9 @@ public class MainActivity extends AppCompatActivity {
         sqLiteDb = initDatabase();
 
         initTable();
-
-
         loadValues();
 
         //setting search function.
-
-
     }
 
 
@@ -189,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
                 requestedCity.setText(cityName);
                 aqi.setText(Integer.toString(dataVO.getAqi()));
                 qualityToText.setText(aqiToText(dataVO.getAqi()));
-                update.setText("Last Update\n" + dataVO.getTime().getS());
+                update.setText("Update: " + dataVO.getTime().getS());
 
 
 
@@ -400,5 +400,70 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d(TAG, "urlString: new String is " + cityName);
         return cityName;
+    }
+
+    //For checking every city's request working.
+    public void Checking() {
+
+        final ArrayList<String> notworking = new ArrayList<>();
+
+        ArrayList<String> cityListForSearch = new ArrayList<>();
+
+        cityListForSearch.add("bangkok");
+        cityListForSearch.add("samut sakhon");
+        cityListForSearch.add("nonthaburi");
+        cityListForSearch.add("rayong");
+        cityListForSearch.add("chiang mai");
+        cityListForSearch.add("nakhon sawan");
+        cityListForSearch.add("surat thani");
+        cityListForSearch.add("phuket");
+        cityListForSearch.add("chiang rai");
+        cityListForSearch.add("mae hong son"); //doesn't work
+        cityListForSearch.add("phrae");
+        cityListForSearch.add("phayao");
+        cityListForSearch.add("samut prakan");
+        cityListForSearch.add("ratchaburi");
+        cityListForSearch.add("songkhla");
+        cityListForSearch.add("khon kaen");
+        cityListForSearch.add("nakhon ratchasima");
+        cityListForSearch.add("chachoengsao");
+        cityListForSearch.add("narathiwat");
+        cityListForSearch.add("yala");
+        cityListForSearch.add("lamphun");
+        cityListForSearch.add("sa kaeo");
+        cityListForSearch.add("pathum thani");
+        cityListForSearch.add("satun");
+        cityListForSearch.add("yangon");
+
+        for(final String cityName : cityListForSearch){
+            String city = urlString(cityName);
+            httpConnection.requestWebServer(city,new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    Log.e(TAG, "onFailure: " + e.toString());
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    if (response.body() != null) {
+
+                        try {
+                            String json = response.body().string();
+                            dataVO = gson.fromJson(json, DataVO.class);
+
+                            handler.sendEmptyMessage(1);
+                        }catch (JsonSyntaxException e){
+                            Log.d(TAG, "onResponse: doesn't work city--------------------> " + cityName);
+                            notworking.add(cityName);
+
+                        }
+                    }
+
+                }
+            });
+        }
+
+
+
     }
 }
