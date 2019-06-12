@@ -22,6 +22,7 @@ import android.widget.Toast;
 
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
@@ -37,6 +38,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 
 import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.FragmentManager;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -53,10 +55,11 @@ public class MainActivity extends AppCompatActivity {
             .create();
     private DataVO dataVO;
     private TextView requestedCity, aqi, qualityToText, update;
-    private HttpConnection httpConnection;
-    private Callback requestCallback;
+    private ConstraintLayout layout;
+    public HttpConnection httpConnection;
+    public Callback requestCallback;
     FloatingActionButton fab;
-    private final String cityName = "Bangkok";
+    public String cityName = "Bangkok";
 
     private SQLiteDatabase sqLiteDb;
     private ArrayList<CityVO>  cityList = new ArrayList<>();
@@ -71,13 +74,13 @@ public class MainActivity extends AppCompatActivity {
             switch (requestCode) {
                 case SEARCH:
                     if(data!=null){
-                    String cityName = data.getStringExtra("city");
-                    Toast.makeText(this,cityName,Toast.LENGTH_SHORT).show();
-                    httpConnection.requestWebServer(cityName,requestCallback);
+                    cityName = data.getStringExtra("city");
+                    String cityName2 = urlString(cityName); //Change string in the form that I can use in url.
+                    Toast.makeText(this,cityName2,Toast.LENGTH_SHORT).show();
+                    httpConnection.requestWebServer(cityName2,requestCallback);
                     }
                     break;
             }
-
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -87,6 +90,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
+        layout = findViewById(R.id.constraint);
         requestedCity = findViewById(R.id.city_name);
         aqi = findViewById(R.id.aqi);
         qualityToText = findViewById(R.id.quality_text);
@@ -122,21 +127,6 @@ public class MainActivity extends AppCompatActivity {
         };
         httpConnection.requestWebServer(cityName, requestCallback);
 
-        httpConnection.requestWebServer("seoul", new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                String json = response.body().string();
-                dataVO = gson.fromJson(json, DataVO.class);
-                handler.sendEmptyMessage(1);
-
-            }
-        });
-
         setToolbar();
 
         //Setting database.
@@ -145,14 +135,11 @@ public class MainActivity extends AppCompatActivity {
         initTable();
 
 
-        insertValue(new CityVO("seoul",1));
-        insertValue(new CityVO("bangkok",0));
-
         loadValues();
 
         //setting search function.
 
-        setSearchFunction();
+
 
 
     }
@@ -309,11 +296,14 @@ public class MainActivity extends AppCompatActivity {
         if(item.getItemId() == android.R.id.home){
             Log.d(TAG, "onContextItemSelected: clicked");
             refreshDrawerItems();}
-//        }else if (item.getItemId()==R.id.fab){ //I don't know exactly why but these
-//            Log.d(TAG, "onOptionsItemSelected: FabClicked");
-//            cityList.add(new CityVO("fab1 clicked",0));
-//            refreshDrawerItems();
-//        }
+            else if (item.getItemId() == R.id.star){
+            Log.d(TAG, "onOptionsItemSelected: clicked star");
+            Toast.makeText(this,"Added",Toast.LENGTH_SHORT).show();
+            CityVO data = new CityVO(cityName,1);
+            insertValue(data);
+            cityList.add(data);
+        }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -334,14 +324,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private String cityNameParsing(String url){
-        String cityName="";
 
 
-        return cityName;
-    }
-
-    private void refreshDrawerItems(){
+    public void refreshDrawerItems(){
         DrawerFragment drawerFragment = new DrawerFragment();
         Bundle bundle = new Bundle();
 
@@ -356,31 +341,14 @@ public class MainActivity extends AppCompatActivity {
         drawerFragment.show(getSupportFragmentManager(),drawerFragment.getTag());
     }
 
-    private void setSearchFunction(){
-        cityListForSearch.add("bangkok");
-        cityListForSearch.add("samut sakhon");
-        cityListForSearch.add("nonthaburi");
-        cityListForSearch.add("Rayong");
-        cityListForSearch.add("chiang mai");
-        cityListForSearch.add("nakhon sawan");
-        cityListForSearch.add("surat thani");
-        cityListForSearch.add("phuket");
-        cityListForSearch.add("chiang rai");
-        cityListForSearch.add("mae hong son"); //doesn't work
-        cityListForSearch.add("phrae");
-        cityListForSearch.add("phayao");
-        cityListForSearch.add("samut prakan");
-        cityListForSearch.add("ratchaburi");
-        cityListForSearch.add("songkhla");
-        cityListForSearch.add("khon kaen");
-        cityListForSearch.add("nakhon ratchasima");
-        cityListForSearch.add("chachoengsao");
-        cityListForSearch.add("narathiwat");
-        cityListForSearch.add("yala");
-        cityListForSearch.add("lamphun");
-        cityListForSearch.add("sa kaeo");
-        cityListForSearch.add("pathum thani");
-        cityListForSearch.add("satun");
-        cityListForSearch.add("yangon");
+    //Change string which is understandable in URL
+    //E.g. Samut takhan -> Samut%20Takhan
+    public String urlString(String cityName){
+
+        cityName = cityName.toLowerCase();
+        cityName = cityName.replace(" ","%20");
+
+        Log.d(TAG, "urlString: new String is "+cityName);
+        return cityName;
     }
 }

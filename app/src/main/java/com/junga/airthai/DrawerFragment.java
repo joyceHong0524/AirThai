@@ -1,9 +1,15 @@
 package com.junga.airthai;
 
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.view.ActionProvider;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -14,17 +20,15 @@ import java.util.ArrayList;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
+import static android.app.Activity.RESULT_OK;
 
 public class DrawerFragment extends BottomSheetDialogFragment {
 
 
     View view;
 
-    @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-        view = View.inflate(context,R.layout.fragment_bottomsheet,null);
-    }
 
     @Nullable
     @Override
@@ -36,9 +40,27 @@ public class DrawerFragment extends BottomSheetDialogFragment {
 
         Menu menu = navView.getMenu();
         menu.clear();
-        for(String name : cityList){
-            menu.add(R.id.group1,Menu.NONE,Menu.NONE,name);
+        for(final String name : cityList){
+
+            MenuItem menuItem1 = menu.add(R.id.group1,Menu.NONE,Menu.NONE,name);
+            menuItem1.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem menuItem) {
+                    MainActivity mainActivity = (MainActivity) getActivity();
+                    String urlName = mainActivity.urlString(name);
+                    mainActivity.cityName = name;
+                    mainActivity.httpConnection.requestWebServer(urlName,mainActivity.requestCallback);
+
+
+
+                    getActivity().getSupportFragmentManager().beginTransaction().remove(DrawerFragment.this).commit();
+                    getActivity().getSupportFragmentManager().popBackStack();
+                    return true;
+                }
+            });
         }
+
+
 
 
 
