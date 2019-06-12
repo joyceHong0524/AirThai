@@ -51,8 +51,6 @@ public class DrawerFragment extends BottomSheetDialogFragment {
                     mainActivity.cityName = name;
                     mainActivity.httpConnection.requestWebServer(urlName,mainActivity.requestCallback);
 
-
-
                     getActivity().getSupportFragmentManager().beginTransaction().remove(DrawerFragment.this).commit();
                     getActivity().getSupportFragmentManager().popBackStack();
                     return true;

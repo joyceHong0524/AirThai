@@ -16,8 +16,6 @@ public class CityAdapter extends ArrayAdapter<String> {
     ArrayList<String> list;
 
 
-
-
     ArrayList<String> cityList = new ArrayList<>();
 
     public CityAdapter(@NonNull Context context, int resource) {

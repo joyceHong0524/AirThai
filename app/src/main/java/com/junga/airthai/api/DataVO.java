@@ -90,48 +90,40 @@ public class DataVO {
         }
     }
 
-    public class City
-    {
+    public class City {
         private String[] geo;
 
         private String name;
 
         private String url;
 
-        public String[] getGeo ()
-        {
+        public String[] getGeo() {
             return geo;
         }
 
-        public void setGeo (String[] geo)
-        {
+        public void setGeo(String[] geo) {
             this.geo = geo;
         }
 
-        public String getName ()
-        {
+        public String getName() {
             return name;
         }
 
-        public void setName (String name)
-        {
+        public void setName(String name) {
             this.name = name;
         }
 
-        public String getUrl ()
-        {
+        public String getUrl() {
             return url;
         }
 
-        public void setUrl (String url)
-        {
+        public void setUrl(String url) {
             this.url = url;
         }
 
         @Override
-        public String toString()
-        {
-            return "ClassPojo [geo = "+geo+", name = "+name+", url = "+url+"]";
+        public String toString() {
+            return "ClassPojo [geo = " + geo + ", name = " + name + ", url = " + url + "]";
         }
     }
 }

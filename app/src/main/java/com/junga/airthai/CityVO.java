@@ -1,5 +1,7 @@
 package com.junga.airthai;
 
+import java.util.Objects;
+
 public class CityVO {
     private String name;
     private int favorite;
@@ -31,5 +33,19 @@ public class CityVO {
                 "name='" + name + '\'' +
                 ", favorite=" + favorite +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CityVO cityVO = (CityVO) o;
+        return favorite == cityVO.favorite &&
+                Objects.equals(name, cityVO.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, favorite);
     }
 }

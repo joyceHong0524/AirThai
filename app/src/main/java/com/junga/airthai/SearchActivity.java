@@ -22,6 +22,7 @@ public class SearchActivity extends AppCompatActivity {
     EditText editText;
     ArrayAdapter adapter;
     private ArrayList<String> cityListForSearch = new ArrayList<>();
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,10 +34,7 @@ public class SearchActivity extends AppCompatActivity {
         configCityList();
 
 
-
-
-
-        adapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1,cityListForSearch);
+        adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, cityListForSearch);
         listView = findViewById(R.id.listView);
         listView.setAdapter(adapter);
 
@@ -44,12 +42,12 @@ public class SearchActivity extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                Toast.makeText(getApplicationContext(),"Position"+adapter.getItem(i).toString(),Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Position" + adapter.getItem(i).toString(), Toast.LENGTH_SHORT).show();
                 //adpater.getItem(i) shows content of the clicked item.
 
                 Intent intent = new Intent();
-                intent.putExtra("city",adapter.getItem(i).toString());
-                setResult(RESULT_OK,intent);
+                intent.putExtra("city", adapter.getItem(i).toString());
+                setResult(RESULT_OK, intent);
                 finish();
             }
 
@@ -76,7 +74,7 @@ public class SearchActivity extends AppCompatActivity {
 
     }
 
-    private void configCityList(){
+    private void configCityList() {
         cityListForSearch.add("bangkok");
         cityListForSearch.add("samut sakhon");
         cityListForSearch.add("nonthaburi");

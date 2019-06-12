@@ -2,6 +2,7 @@ package com.junga.airthai;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
@@ -12,6 +13,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -39,6 +41,7 @@ import java.util.ArrayList;
 
 import androidx.appcompat.widget.Toolbar;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentManager;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -47,7 +50,6 @@ import okhttp3.Response;
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private static final int SEARCH = 3000;
-
 
 
     private final Gson gson = new GsonBuilder()
@@ -59,25 +61,26 @@ public class MainActivity extends AppCompatActivity {
     public HttpConnection httpConnection;
     public Callback requestCallback;
     FloatingActionButton fab;
-    public String cityName = "Bangkok";
+    public String cityName = "Bangkok"; //Bangkok is default city if there is no savedInstance.
+    private Menu menu;
 
     private SQLiteDatabase sqLiteDb;
-    private ArrayList<CityVO>  cityList = new ArrayList<>();
+    private ArrayList<CityVO> cityList = new ArrayList<>();
     private ArrayList<String> cityListForSearch = new ArrayList<>();
 
     private FragmentManager fm = getSupportFragmentManager();
 
-
+    SharedPreferences pref;
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if(resultCode == RESULT_OK){
+        if (resultCode == RESULT_OK) {
             switch (requestCode) {
                 case SEARCH:
-                    if(data!=null){
-                    cityName = data.getStringExtra("city");
-                    String cityName2 = urlString(cityName); //Change string in the form that I can use in url.
-                    Toast.makeText(this,cityName2,Toast.LENGTH_SHORT).show();
-                    httpConnection.requestWebServer(cityName2,requestCallback);
+                    if (data != null) {
+                        cityName = data.getStringExtra("city");
+                        String cityName2 = urlString(cityName); //Change string in the form that I can use in url.
+                        Toast.makeText(this, cityName2, Toast.LENGTH_SHORT).show();
+                        httpConnection.requestWebServer(cityName2, requestCallback);
                     }
                     break;
             }
@@ -86,9 +89,32 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onStop() {
+        super.onStop();
+
+        SharedPreferences.Editor editor = pref.edit();
+
+        editor.putString("last",cityName);
+        editor.commit();
+
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
+
+        //Get sharedPreference Value to configure last cityName
+        pref = getSharedPreferences("pref",MODE_PRIVATE);
+        String lastCity = pref.getString("last",null);
+
+        if(lastCity==null){cityName="Bangkok";}
+        else{ cityName = lastCity;}
+
+
+        //Initiate things.
 
 
         layout = findViewById(R.id.constraint);
@@ -102,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Log.d(TAG, "onClick: Fab is clicked");
                 Intent intent = new Intent(MainActivity.this, SearchActivity.class);
-                startActivityForResult(intent,SEARCH);
+                startActivityForResult(intent, SEARCH);
             }
         });
 
@@ -131,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
 
         //Setting database.
         sqLiteDb = initDatabase();
-        DropTable("CITY_T");
+
         initTable();
 
 
@@ -140,11 +166,7 @@ public class MainActivity extends AppCompatActivity {
         //setting search function.
 
 
-
-
     }
-
-
 
 
     @SuppressLint("HandlerLeak")
@@ -153,6 +175,10 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void handleMessage(Message msg) {
             if (msg.what == 1) {
+
+                //flag for star
+                boolean flag = false;
+
 
                 //Check if the DataVO'memory has been allocated.
                 Log.d(TAG, "dataVO : dominentpol " + dataVO.getDominentpol());
@@ -164,14 +190,24 @@ public class MainActivity extends AppCompatActivity {
                 aqi.setText(Integer.toString(dataVO.getAqi()));
                 qualityToText.setText(aqiToText(dataVO.getAqi()));
                 update.setText("Last Update\n" + dataVO.getTime().getS());
+
+
+
+                for (CityVO city : cityList) {
+                    if (city.getName().equals(cityName)) {
+                        flag = true;
+//                        Log.d(TAG, "handleMessage: cityList name"+city.getName()+" current cityName "+cityName);
+                    }
+                }
+                if (flag)
+                {
+                    menu.getItem(0).setIcon(ContextCompat.getDrawable(MainActivity.this,R.drawable.ic_star_yellow_24dp));
+                }else{
+                menu.getItem(0).setIcon(ContextCompat.getDrawable(MainActivity.this,R.drawable.ic_star_24dp));}
+
             }
         }
     };
-
-
-
-
-
 
     class MyDeserializer implements JsonDeserializer<DataVO> {
         @Override
@@ -187,28 +223,18 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     private void setToolbar() {
 
         BottomAppBar bar = findViewById(R.id.bar);
         setSupportActionBar(bar);
-//        bar.setNavigationOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                if(view.getId() == R.id.fab){
-//                    Log.d(TAG, "onClick: fabclicked");
-//                } else if (view.getId() == android.R.id.home){
-//                    Log.d(TAG, "onContextItemSelected: clicked");
-//                    refreshDrawerItems();
-//                }
-//            }
-//        });
+
 
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu1, menu);
+        this.menu = menu;
         return true;
     }
 
@@ -234,58 +260,56 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private SQLiteDatabase initDatabase(){
+    private SQLiteDatabase initDatabase() {
         SQLiteDatabase db = null;
-        File file = new File(getFilesDir(),"city.db");
+        File file = new File(getFilesDir(), "city.db");
 
-        Log.d(TAG, "initDatabase: "+ file.toString()+" has been saved");
+        Log.d(TAG, "initDatabase: " + file.toString() + " has been saved");
         try {
-            db = SQLiteDatabase.openOrCreateDatabase(file,null);
-        }catch (SQLException e){
+            db = SQLiteDatabase.openOrCreateDatabase(file, null);
+        } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        if(db == null){
+        if (db == null) {
             Log.d(TAG, "initDatabase: failed" + file.getAbsolutePath());
         }
 
         return db;
     }
 
-    private void initTable(){
-        String query = "CREATE TABLE IF NOT EXISTS CITY_T ("+
-                "NAME "             + "TEXT," +
-                "FAVORITE "         + "INTEGER NOT NULL)"; //Since sqlite doesn't have boolean type. true = 1, false = 0
+    private void initTable() {
+        String query = "CREATE TABLE IF NOT EXISTS CITY_T (" +
+                "NAME " + "TEXT," +
+                "FAVORITE " + "INTEGER NOT NULL)"; //Since sqlite doesn't have boolean type. true = 1, false = 0
 
-        Log.d(TAG, "initTable: query string :" +query);
+        Log.d(TAG, "initTable: query string :" + query);
         sqLiteDb.execSQL(query);
     }
 
-    private void loadValues(){
-        if (sqLiteDb != null){
+    private void loadValues() {
+        if (sqLiteDb != null) {
             String query = "SELECT * FROM CITY_T";
             Cursor cursor;
 
-            cursor = sqLiteDb.rawQuery(query,null);
+            cursor = sqLiteDb.rawQuery(query, null);
 
-            while(cursor.moveToNext()){ // if the record exists,
+            while (cursor.moveToNext()) { // if the record exists,
 
                 String name = cursor.getString(0);
                 int favorite = cursor.getInt(1);
-                CityVO city = new CityVO(name,favorite);
+                CityVO city = new CityVO(name, favorite);
                 cityList.add(city);
 
-                Log.d(TAG, "loadValues: "+city.toString());
-
-
-
+                Log.d(TAG, "loadValues: " + city.toString());
             }
+            Log.d(TAG, "loadValues: Ended");
         }
     }
 
-    private void DeleteValue(String cityName){
-        if(sqLiteDb!=null){
-            String query = "DELETE FROM CITY_T WHERE NAME ="+cityName;
+    private void DeleteValue(String cityName) {
+        if (sqLiteDb != null) {
+            String query = "DELETE FROM CITY_T WHERE NAME =" + cityName;
             sqLiteDb.execSQL(query);
         }
     }
@@ -293,14 +317,31 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
-        if(item.getItemId() == android.R.id.home){
+        if (item.getItemId() == android.R.id.home) {
             Log.d(TAG, "onContextItemSelected: clicked");
-            refreshDrawerItems();}
-            else if (item.getItemId() == R.id.star){
+            refreshDrawerItems();
+        } else if (item.getItemId() == R.id.star) {
             Log.d(TAG, "onOptionsItemSelected: clicked star");
-            Toast.makeText(this,"Added",Toast.LENGTH_SHORT).show();
-            CityVO data = new CityVO(cityName,1);
+
+            for (CityVO city : cityList) {
+                if (city.getName().equals(cityName)) {
+                    CityVO data = new CityVO(cityName,1);
+                    deleteValue(data);
+                    Toast.makeText(this, "This city is deleted from the list", Toast.LENGTH_SHORT).show();
+                    menu.getItem(0).setIcon(ContextCompat.getDrawable(MainActivity.this,R.drawable.ic_star_24dp));
+                    cityList.remove(data);
+
+                    for (CityVO city1 : cityList){
+                        Log.d(TAG, city1.getName());
+                    }
+
+                    return false;
+                }
+            }
+            CityVO data = new CityVO(cityName, 1);
             insertValue(data);
+            Toast.makeText(this, "Added to List", Toast.LENGTH_SHORT).show();
+            menu.getItem(0).setIcon(ContextCompat.getDrawable(MainActivity.this,R.drawable.ic_star_yellow_24dp));
             cityList.add(data);
         }
 
@@ -308,47 +349,56 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void insertValue(CityVO city){
-        if(sqLiteDb != null){
-            String query = "INSERT INTO CITY_T (NAME, FAVORITE) VALUES ("+"'"+city.getName()+"',"+city.getFavorite()+")";
+    private void insertValue(CityVO city) {
+        if (sqLiteDb != null) {
+            String query = "INSERT INTO CITY_T (NAME, FAVORITE) VALUES (" + "'" + city.getName() + "'," + city.getFavorite() + ")";
 
-            Log.d(TAG, "insertValue: insert query: "+query);
+            Log.d(TAG, "insertValue: insert query: " + query);
             sqLiteDb.execSQL(query);
         }
     }
 
-    private void DropTable(String tableName){
+    private void deleteValue(CityVO city){
         if(sqLiteDb != null){
-            String query = "DROP TABLE "+tableName;
+            String query = "DELETE FROM CITY_T WHERE NAME = '"+city.getName()+"'";
+
+            Log.d(TAG, "deleteValue: delete query" + query);
+            sqLiteDb.execSQL(query);
+
+        }
+    }
+
+    private void DropTable(String tableName) {
+        if (sqLiteDb != null) {
+            String query = "DROP TABLE " + tableName;
             sqLiteDb.execSQL(query);
         }
     }
 
 
-
-    public void refreshDrawerItems(){
+    public void refreshDrawerItems() {
         DrawerFragment drawerFragment = new DrawerFragment();
         Bundle bundle = new Bundle();
 
         ArrayList<String> stringArrayList = new ArrayList<>();
 
-        for(CityVO data: cityList){
+        for (CityVO data : cityList) {
             stringArrayList.add(data.getName());
         }
-        bundle.putStringArrayList("city",stringArrayList);
+        bundle.putStringArrayList("city", stringArrayList);
         drawerFragment.setArguments(bundle);
-        Log.d(TAG, "refreshDrawerItems: "+bundle.toString());
-        drawerFragment.show(getSupportFragmentManager(),drawerFragment.getTag());
+        Log.d(TAG, "refreshDrawerItems: " + bundle.toString());
+        drawerFragment.show(getSupportFragmentManager(), drawerFragment.getTag());
     }
 
     //Change string which is understandable in URL
     //E.g. Samut takhan -> Samut%20Takhan
-    public String urlString(String cityName){
+    public String urlString(String cityName) {
 
         cityName = cityName.toLowerCase();
-        cityName = cityName.replace(" ","%20");
+        cityName = cityName.replace(" ", "%20");
 
-        Log.d(TAG, "urlString: new String is "+cityName);
+        Log.d(TAG, "urlString: new String is " + cityName);
         return cityName;
     }
 }
