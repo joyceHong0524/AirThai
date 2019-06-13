@@ -34,7 +34,7 @@ public class DrawerFragment extends BottomSheetDialogFragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_bottomsheet,container,false);
-        NavigationView navView = (NavigationView) view.findViewById(R.id.navigationView);
+        NavigationView navView = view.findViewById(R.id.navigationView);
         Bundle bundle = getArguments();
         ArrayList<String> cityList = bundle.getStringArrayList("city");
 
@@ -66,7 +66,7 @@ public class DrawerFragment extends BottomSheetDialogFragment {
     }
 
     public void addItem(String name){
-        NavigationView navView = (NavigationView) view.findViewById(R.id.navigationView);
+        NavigationView navView = view.findViewById(R.id.navigationView);
 
         Menu menu = navView.getMenu();
         menu.add(R.id.group1,Menu.NONE,Menu.NONE,name);

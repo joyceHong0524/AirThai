@@ -32,7 +32,6 @@ public class SearchActivity extends AppCompatActivity {
 
         configCityList();
 
-
         adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, cityListForSearch);
         listView = findViewById(R.id.listView);
         listView.setAdapter(adapter);
@@ -73,30 +72,30 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     private void configCityList() {
-        cityListForSearch.add("bangkok");
-        cityListForSearch.add("samut sakhon");
-        cityListForSearch.add("nonthaburi");
-        cityListForSearch.add("rayong");
-        cityListForSearch.add("chiang mai");
-        cityListForSearch.add("nakhon sawan");
-        cityListForSearch.add("surat thani");
-        cityListForSearch.add("phuket");
-        cityListForSearch.add("chiang rai");
-        cityListForSearch.add("mae hong son"); //doesn't work
-        cityListForSearch.add("phrae");
-        cityListForSearch.add("phayao");
-        cityListForSearch.add("samut prakan");
-        cityListForSearch.add("ratchaburi");
-        cityListForSearch.add("songkhla");
-        cityListForSearch.add("khon kaen");
-        cityListForSearch.add("nakhon ratchasima");
-        cityListForSearch.add("chachoengsao");
-        cityListForSearch.add("narathiwat");
-        cityListForSearch.add("yala");
-        cityListForSearch.add("lamphun");
-        cityListForSearch.add("sa kaeo");
-        cityListForSearch.add("pathum thani");
-        cityListForSearch.add("satun");
-        cityListForSearch.add("yangon");
+        cityListForSearch.add("Bangkok");
+        cityListForSearch.add("Samut Sakhon");
+//        cityListForSearch.add("nonthaburi");
+        cityListForSearch.add("Rayong");
+        cityListForSearch.add("Chiang mai");
+        cityListForSearch.add("Nakhon sawan");
+        cityListForSearch.add("Surat Thani");
+        cityListForSearch.add("Phuket");
+        cityListForSearch.add("Chiang Rai");
+//        cityListForSearch.add("mae hong son"); //doesn't work
+        cityListForSearch.add("Phrae");
+        cityListForSearch.add("Phayao");
+        cityListForSearch.add("Samut Prakan");
+        cityListForSearch.add("Ratchaburi");
+//        cityListForSearch.add("songkhla");
+        cityListForSearch.add("Khon Kaen");
+        cityListForSearch.add("Nakhon Ratchasima");
+//        cityListForSearch.add("chachoengsao");
+        cityListForSearch.add("Narathiwat");
+//        cityListForSearch.add("yala");
+        cityListForSearch.add("Lamphun");
+//        cityListForSearch.add("sa kaeo");
+        cityListForSearch.add("Pathum Thani");
+        cityListForSearch.add("Satun");
+        cityListForSearch.add("Yangon");
     }
 }

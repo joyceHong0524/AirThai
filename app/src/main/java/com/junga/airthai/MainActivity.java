@@ -19,6 +19,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.PopupMenu;
+import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -38,7 +39,14 @@ import com.junga.airthai.api.HttpConnection;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.text.DateFormat;
+import java.text.FieldPosition;
+import java.text.ParsePosition;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
 import androidx.appcompat.widget.Toolbar;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -121,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
         aqi = findViewById(R.id.aqi);
         qualityToText = findViewById(R.id.quality_text);
         update = findViewById(R.id.update);
-        fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -189,8 +197,7 @@ public class MainActivity extends AppCompatActivity {
                 requestedCity.setText(cityName);
                 aqi.setText(Integer.toString(dataVO.getAqi()));
                 qualityToText.setText(aqiToText(dataVO.getAqi()));
-                update.setText("Update: " + dataVO.getTime().getS());
-
+                update.setText("Updated: " + dataVO.getTime().getS());
 
 
                 for (CityVO city : cityList) {
@@ -465,5 +472,50 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+    }
+
+    private String timeToAgo(Long timestamp){
+        //Change 2019/10/18 10:00:00 format to X hours ago
+
+
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        Log.d(TAG, "timeToAgo:TimeZone :"+TimeZone.getTimeZone("GMT"));
+        long time = cal.getTimeInMillis();
+        Log.d(TAG, "timeToAgo: time with cal : "+time);
+        long curTime = System.currentTimeMillis() / 1000 + 32400;
+        Log.d(TAG, "timeToAgo: curTime : " + curTime);
+        long diffTime = (curTime - timestamp); //1000으로 나눠주는 이유는 millisecond가 아닌 second만 신경을 써줄 것이므로
+        Log.d(TAG, "timeToAgo: diffTime " + diffTime);
+        long hour =diffTime/3600;
+        Log.d(TAG, "timeToAgo: hour  "+ hour);
+        Log.d(TAG, "timeToAgo: timestamp : "+timestamp);
+        diffTime =diffTime%3600;
+        long min = diffTime/60;
+        long sec = diffTime%60;
+
+        String ret = "";
+
+
+        if(hour > 24){
+            ret = new SimpleDateFormat("MM/dd").format(new Date(timestamp));
+
+            if (hour>8760){
+                ret = new SimpleDateFormat("MM/dd/yyyy").format(new Date(timestamp));
+            }
+        }
+        else if(hour > 0){
+            ret = hour+" hours ago";
+        }
+        else if(min > 0){
+            ret = min+" mins ago";
+        }
+        else if(sec > 0){
+            ret = "just now!";
+        }
+        else{
+            ret = new SimpleDateFormat("MM/dd").format(new Date(timestamp));
+        }
+
+        return ret;
     }
 }
